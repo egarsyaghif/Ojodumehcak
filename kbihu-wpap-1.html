@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Data Jemaah KBIHU - WPAP Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS (xlsx) for Excel Import/Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* WPAP Color Scheme - Turquoise & Orange */
+        .wpap-primary { background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); }
+        .wpap-yellow { background: linear-gradient(135deg, #F97316 0%, #EA580C 100%); }
+        .wpap-blue { background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%); }
+        .wpap-green { background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%); }
+        
+        /* WPAP Background Pattern */
+        .wpap-bg {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FFFFFF 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wpap-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Geometric Accents */
+        .geometric-accent {
+            position: relative;
+        }
+        
+        .geometric-accent::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #06B6D4 0%, #F97316 50%, #14B8A6 100%);
+            bottom: 0;
+            left: 0;
+            border-radius: 2px;
+        }
+        
+        /* Logo Container */
+        .logo-container {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        
+        /* Card WPAP Style */
+        .wpap-card {
+            background: white;
+            border: 2px solid #CCFBF1;
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wpap-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+            pointer-events: none;
+        }
+        
+        .wpap-card:hover::before {
+            left: 100%;
+        }
+        
+        .wpap-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+        }
+        
+        /* Stat Icon WPAP */
+        .stat-icon-wpap {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 22px;
+        }
+        
+        .icon-red { background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); }
+        .icon-yellow { background: linear-gradient(135deg, #F97316 0%, #EA580C 100%); }
+        .icon-blue { background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%); }
+        .icon-green { background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%); }
+        
+        /* Table Header WPAP */
+        .table-header-wpap {
+            background: linear-gradient(135deg, #0891B2 0%, #0D7377 100%);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 12px;
+        }
+        
+        /* Button WPAP */
+        .btn-wpap-primary {
+            background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+            color: white;
+            font-weight: 700;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+        
+        .btn-wpap-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+        
+        .btn-wpap-yellow {
+            background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+            color: white;
+            font-weight: 700;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+        
+        .btn-wpap-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+        }
+        
+        .btn-wpap-blue {
+            background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+            color: white;
+            font-weight: 700;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+        }
+        
+        .btn-wpap-blue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+        }
+        
+        /* Title WPAP */
+        .title-wpap {
+            background: linear-gradient(135deg, #06B6D4 0%, #14B8A6 50%, #F97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Separator WPAP */
+        .separator-wpap {
+            height: 4px;
+            background: linear-gradient(90deg, #06B6D4 0%, #14B8A6 33%, #F97316 66%, #06B6D4 100%);
+            border-radius: 2px;
+            margin: 1rem 0;
+        }
+        
+        /* Responsive Header */
+        @media (max-width: 768px) {
+            .logo-container {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    </style>
+</head>
+<body class="wpap-bg text-slate-800 font-sans min-h-screen pb-12" x-data="kbihuApp()" x-init="initData()" x-cloak>
+
+    <!-- Header / Navbar WPAP -->
+    <header class="wpap-primary text-white shadow-2xl sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
+            <div class="flex items-center space-x-4">
+                <!-- Logo Container -->
+                <div class="logo-container">
+                    <svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <!-- Turquoise diagonal -->
+                        <path d="M 0 0 L 192 0 L 60 192 L 0 60 Z" fill="#06B6D4"/>
+                        <!-- White arrow shape -->
+                        <path d="M 60 0 L 192 192 L 192 60 L 60 0 Z" fill="white"/>
+                        <!-- Orange accent -->
+                        <path d="M 60 192 L 192 192 L 60 0 Z" fill="#F97316" opacity="0.9"/>
+                    </svg>
+                </div>
+                
+                <!-- Title -->
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight title-wpap">KBIHU</h1>
+                    <p class="text-xs sm:text-sm font-semibold text-red-100">Data Jemaah Haji & Umrah</p>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2 justify-center md:justify-end w-full md:w-auto">
+                <button @click="openAddModal()" class="btn-wpap-yellow flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus"></i> <span class="hidden sm:inline">Tambah</span>
+                </button>
+                <label class="btn-wpap-blue flex items-center gap-2 text-sm cursor-pointer">
+                    <i class="fa-solid fa-file-import"></i> <span class="hidden sm:inline">Import</span>
+                    <input type="file" accept=".xlsx, .xls, .csv" @change="importExcelSmart($event)" class="hidden">
+                </label>
+                <button @click="exportExcel()" class="bg-cyan-700 hover:bg-cyan-800 text-white font-bold px-3 sm:px-4 py-2 rounded-lg text-sm shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Export</span>
+                </button>
+                <button @click="downloadTemplate()" class="bg-cyan-600/50 hover:bg-cyan-600 text-white px-2 sm:px-3 py-2 rounded-lg text-xs transition" title="Template">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+        <div class="separator-wpap"></div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
+
+        <!-- Stat Cards WPAP -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <!-- Total Jemaah -->
+            <div class="wpap-card">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Jemaah</p>
+                        <p class="text-3xl font-black text-cyan-600" x-text="jemaahList.length"></p>
+                    </div>
+                    <div class="stat-icon-wpap icon-red">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Berangkat -->
+            <div class="wpap-card">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Berangkat</p>
+                        <p class="text-3xl font-black text-teal-600" x-text="countStatus('Brkt')"></p>
+                    </div>
+                    <div class="stat-icon-wpap icon-green">
+                        <i class="fa-solid fa-plane-departure"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tunda / Pelimpahan -->
+            <div class="wpap-card">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tunda</p>
+                        <p class="text-3xl font-black text-orange-600" x-text="countStatus('Tunda') + countStatus('Pelimpahan')"></p>
+                    </div>
+                    <div class="stat-icon-wpap icon-yellow">
+                        <i class="fa-solid fa-hourglass-end"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Total Wilayah -->
+            <div class="wpap-card">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Wilayah</p>
+                        <p class="text-3xl font-black text-teal-600" x-text="uniqueDesaList.length"></p>
+                    </div>
+                    <div class="stat-icon-wpap icon-blue">
+                        <i class="fa-solid fa-map"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="wpap-card mb-8">
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                <!-- Universal Search -->
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" x-model="search" placeholder="Cari Nama, No Porsi, HP..." 
+                        class="w-full pl-9 pr-4 py-3 border-2 border-cyan-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap w-full md:w-auto gap-2">
+                    <select x-model="filterDesa" class="border-2 border-cyan-300 text-slate-700 text-sm rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <option value="">Semua Desa</option>
+                        <template x-for="d in uniqueDesaList" :key="d">
+                            <option :value="d" x-text="d"></option>
+                        </template>
+                    </select>
+
+                    <select x-model="filterCatatan" class="border-2 border-cyan-300 text-slate-700 text-sm rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <option value="">Semua Status</option>
+                        <option value="Brkt">Berangkat</option>
+                        <option value="Tunda">Tunda</option>
+                        <option value="Pelimpahan">Pelimpahan</option>
+                        <option value="MD">Meninggal Dunia</option>
+                        <option value="Cabut">Cabut Berkas</option>
+                    </select>
+
+                    <button x-show="search || filterDesa || filterCatatan" @click="resetFilter()" class="text-sm font-bold text-cyan-600 hover:text-cyan-800 px-3 py-2 rounded-lg hover:bg-cyan-100 transition">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table WPAP -->
+        <div class="wpap-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="table-header-wpap">
+                            <th class="p-3 text-center w-12">No</th>
+                            <th class="p-3">No Porsi</th>
+                            <th class="p-3">Nama Jemaah</th>
+                            <th class="p-3">No HP</th>
+                            <th class="p-3">Alamat</th>
+                            <th class="p-3">Desa</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-center w-28">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-cyan-100">
+                        <template x-for="(item, index) in filteredJemaah" :key="item.id || index">
+                            <tr class="hover:bg-cyan-50/70 transition" :class="{'bg-orange-50/30': item['CATATAN'] === 'MD'}">
+                                <td class="p-3 text-center text-slate-500 font-bold" x-text="index + 1"></td>
+                                <td class="p-3 font-semibold text-cyan-700" x-text="item['NO PORSI']"></td>
+                                <td class="p-3 font-bold text-slate-900" x-text="item['NAMA']"></td>
+                                <td class="p-3 text-teal-600 font-mono" x-text="item['HP']"></td>
+                                <td class="p-3 text-xs text-slate-600" x-text="item['ALAMAT LENGKAP']"></td>
+                                <td class="p-3 font-semibold text-teal-700" x-text="item['DESA']"></td>
+                                <td class="p-3">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold" 
+                                        :class="getStatusClass(item['CATATAN'])" 
+                                        x-text="item['CATATAN']"></span>
+                                </td>
+                                <td class="p-3 text-center flex gap-2 justify-center">
+                                    <button @click="openEditModal(item)" class="text-blue-600 hover:text-blue-800 font-bold text-lg" title="Edit">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button @click="deleteJemaah(item.id)" class="text-red-600 hover:text-red-800 font-bold text-lg" title="Hapus">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="filteredJemaah.length === 0">
+                            <tr>
+                                <td colspan="8" class="p-8 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <i class="fa-solid fa-inbox text-5xl text-slate-300"></i>
+                                        <p class="text-slate-500 font-semibold">Tidak ada data yang sesuai dengan filter</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Add/Edit -->
+    <div x-show="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" x-transition>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" @click.stop>
+            <h2 class="text-2xl font-black text-cyan-600 mb-4 geometric-accent" x-text="editingId ? 'Edit Jemaah' : 'Tambah Jemaah Baru'"></h2>
+            
+            <div class="space-y-4">
+                <input type="text" x-model="formData['NO PORSI']" placeholder="No Porsi" 
+                    class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <input type="text" x-model="formData['NAMA']" placeholder="Nama Jemaah" 
+                    class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <input type="text" x-model="formData['HP']" placeholder="No HP / WhatsApp" 
+                    class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <input type="text" x-model="formData['ALAMAT LENGKAP']" placeholder="Alamat Lengkap" 
+                    class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <input type="text" x-model="formData['DESA']" placeholder="Desa" 
+                    class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <select x-model="formData['CATATAN']" class="w-full border-2 border-cyan-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <option value="">-- Pilih Status --</option>
+                    <option value="Brkt">Berangkat</option>
+                    <option value="Tunda">Tunda</option>
+                    <option value="Pelimpahan">Pelimpahan</option>
+                    <option value="MD">Meninggal Dunia</option>
+                    <option value="Cabut">Cabut Berkas</option>
+                </select>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button @click="saveJemaah()" class="btn-wpap-primary flex-1">
+                    <i class="fa-solid fa-check"></i> Simpan
+                </button>
+                <button @click="closeModal()" class="flex-1 border-2 border-cyan-600 text-cyan-600 font-bold rounded-lg py-2 hover:bg-cyan-50 transition">
+                    <i class="fa-solid fa-x"></i> Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Summary Modal -->
+    <div x-show="showImportSummary" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" x-transition>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" @click.stop>
+            <h2 class="text-2xl font-black text-teal-600 mb-4">Import Berhasil!</h2>
+            <p class="text-slate-700 font-semibold mb-3" x-text="importSummaryText"></p>
+            <div class="bg-teal-50 border-l-4 border-teal-600 p-3 rounded text-sm text-slate-700 mb-4" x-html="importSummaryDetails"></div>
+            <button @click="showImportSummary = false" class="btn-wpap-blue w-full">
+                <i class="fa-solid fa-check"></i> OK
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function kbihuApp() {
+            return {
+                jemaahList: [],
+                search: '',
+                filterDesa: '',
+                filterCatatan: '',
+                showModal: false,
+                showImportSummary: false,
+                editingId: null,
+                importSummaryText: '',
+                importSummaryDetails: '',
+                formData: {},
+
+                get filteredJemaah() {
+                    return this.jemaahList.filter(item => {
+                        const searchLower = this.search.toLowerCase();
+                        const matchSearch = !this.search || 
+                            item['NAMA'].toLowerCase().includes(searchLower) ||
+                            item['NO PORSI'].toLowerCase().includes(searchLower) ||
+                            item['HP'].includes(this.search) ||
+                            item['ALAMAT LENGKAP'].toLowerCase().includes(searchLower);
+                        
+                        const matchDesa = !this.filterDesa || item['DESA'] === this.filterDesa;
+                        const matchCatatan = !this.filterCatatan || item['CATATAN'] === this.filterCatatan;
+                        
+                        return matchSearch && matchDesa && matchCatatan;
+                    });
+                },
+
+                get uniqueDesaList() {
+                    return [...new Set(this.jemaahList.map(j => j['DESA']))].sort();
+                },
+
+                initData() {
+                    const saved = localStorage.getItem('kbihuData');
+                    if (saved) this.jemaahList = JSON.parse(saved);
+                },
+
+                saveToStorage() {
+                    localStorage.setItem('kbihuData', JSON.stringify(this.jemaahList));
+                },
+
+                openAddModal() {
+                    this.editingId = null;
+                    this.formData = {};
+                    this.showModal = true;
+                },
+
+                openEditModal(item) {
+                    this.editingId = item.id;
+                    this.formData = {...item};
+                    this.showModal = true;
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    this.formData = {};
+                },
+
+                saveJemaah() {
+                    if (!this.formData['NAMA']) { alert('Nama tidak boleh kosong'); return; }
+                    
+                    if (this.editingId) {
+                        const idx = this.jemaahList.findIndex(j => j.id === this.editingId);
+                        this.jemaahList[idx] = {...this.formData};
+                    } else {
+                        this.formData.id = Date.now() + Math.random();
+                        this.jemaahList.unshift(this.formData);
+                    }
+                    
+                    this.saveToStorage();
+                    this.closeModal();
+                },
+
+                deleteJemaah(id) {
+                    if (confirm('Hapus data ini?')) {
+                        this.jemaahList = this.jemaahList.filter(j => j.id !== id);
+                        this.saveToStorage();
+                    }
+                },
+
+                countStatus(status) {
+                    return this.jemaahList.filter(j => j['CATATAN'] === status).length;
+                },
+
+                getStatusClass(status) {
+                    const classes = {
+                        'Brkt': 'bg-green-100 text-green-800',
+                        'Tunda': 'bg-yellow-100 text-yellow-800',
+                        'Pelimpahan': 'bg-orange-100 text-orange-800',
+                        'MD': 'bg-red-100 text-red-800',
+                        'Cabut': 'bg-slate-100 text-slate-800'
+                    };
+                    return classes[status] || 'bg-slate-100 text-slate-800';
+                },
+
+                resetFilter() {
+                    this.search = '';
+                    this.filterDesa = '';
+                    this.filterCatatan = '';
+                },
+
+                synonymMap: {
+                    'NO PORSI': ['porsi', 'no porsi', 'nomor porsi'],
+                    'NAMA': ['nama', 'nama jemaah', 'nama lengkap'],
+                    'HP': ['hp', 'no hp', 'nomor hp', 'whatsapp', 'wa'],
+                    'ALAMAT LENGKAP': ['alamat', 'alamat lengkap'],
+                    'DESA': ['desa', 'wilayah', 'kecamatan'],
+                    'CATATAN': ['catatan', 'status', 'keterangan']
+                },
+
+                importExcelSmart(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const firstSheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[firstSheetName];
+                            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                            if (rawData.length < 2) {
+                                alert("File Excel kosong");
+                                return;
+                            }
+
+                            let headerRowIdx = 0;
+                            let detectedHeaders = [];
+                            for (let i = 0; i < Math.min(10, rawData.length); i++) {
+                                const row = rawData[i];
+                                if (row && row.some(cell => cell && typeof cell === 'string')) {
+                                    const rowString = row.join(' ').toLowerCase();
+                                    if (rowString.includes('nama') || rowString.includes('porsi')) {
+                                        headerRowIdx = i;
+                                        detectedHeaders = row;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!detectedHeaders.length) detectedHeaders = rawData[0];
+
+                            const colMapping = {};
+                            const mappedLog = [];
+
+                            detectedHeaders.forEach((colName, colIndex) => {
+                                if (!colName) return;
+                                const cleanCol = colName.toString().trim().toLowerCase();
+                                for (const [standardKey, synonyms] of Object.entries(this.synonymMap)) {
+                                    if (!colMapping[standardKey] && synonyms.some(syn => cleanCol.includes(syn))) {
+                                        colMapping[standardKey] = colIndex;
+                                        mappedLog.push(`• "<b>${colName}</b>" ➔ <b>${standardKey}</b>`);
+                                    }
+                                }
+                            });
+
+                            let importedCount = 0;
+                            const newRecords = [];
+
+                            for (let r = headerRowIdx + 1; r < rawData.length; r++) {
+                                const row = rawData[r];
+                                if (!row || !row.some(c => c)) continue;
+
+                                const getVal = (stdKey) => {
+                                    const idx = colMapping[stdKey];
+                                    return idx !== undefined && row[idx] ? row[idx].toString().trim() : '';
+                                };
+
+                                const nama = getVal('NAMA');
+                                if (nama) {
+                                    newRecords.push({
+                                        id: Date.now() + Math.random(),
+                                        'NO PORSI': getVal('NO PORSI'),
+                                        'NAMA': nama,
+                                        'HP': getVal('HP'),
+                                        'ALAMAT LENGKAP': getVal('ALAMAT LENGKAP'),
+                                        'DESA': getVal('DESA') || 'KBIHU',
+                                        'CATATAN': getVal('CATATAN') || 'Imported'
+                                    });
+                                    importedCount++;
+                                }
+                            }
+
+                            if (importedCount > 0) {
+                                this.jemaahList = [...newRecords, ...this.jemaahList];
+                                this.saveToStorage();
+                                this.importSummaryText = `✓ Berhasil import ${importedCount} data jemaah!`;
+                                this.importSummaryDetails = mappedLog.length ? mappedLog.join('<br>') : 'Import selesai.';
+                                this.showImportSummary = true;
+                            } else {
+                                alert("Tidak ada data valid");
+                            }
+                        } catch (err) {
+                            alert("Error membaca file");
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                    event.target.value = '';
+                },
+
+                exportExcel() {
+                    const exportData = this.filteredJemaah.map((item, idx) => ({
+                        'NO': idx + 1,
+                        'NO PORSI': item['NO PORSI'],
+                        'NAMA': item['NAMA'],
+                        'HP': item['HP'],
+                        'ALAMAT LENGKAP': item['ALAMAT LENGKAP'],
+                        'DESA': item['DESA'],
+                        'CATATAN': item['CATATAN']
+                    }));
+
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+                    XLSX.writeFile(workbook, `Data_Jemaah_${new Date().toISOString().slice(0,10)}.xlsx`);
+                },
+
+                downloadTemplate() {
+                    const templateData = [
+                        { 'NO PORSI': 1300123456, 'NAMA': 'CONTOH JEMAAH', 'HP': '081234567890', 'ALAMAT LENGKAP': 'JL. MERDEKA NO. 12', 'DESA': 'PAGENTAN', 'CATATAN': 'Brkt' }
+                    ];
+                    const worksheet = XLSX.utils.json_to_sheet(templateData);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+                    XLSX.writeFile(workbook, "Template_Import.xlsx");
+                }
+            };
+        }
+    </script>
+</body>
+</html>
